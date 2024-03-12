@@ -1,6 +1,8 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestSum(t *testing.T) {
 	// total := Sum(5, 5)
@@ -41,6 +43,24 @@ func TestMax(t *testing.T) {
 		max := GetMax(item.a, item.b)
 		if max != item.n {
 			t.Errorf("GetMax Was Incorrect, Got %d, Expected %d", max, item.n)
+		}
+	}
+}
+
+func TestFib(t *testing.T) {
+	tables := []struct {
+		a int
+		n int
+	}{
+		{1, 1},
+		{8, 21},
+		{50, 12586269025},
+	}
+
+	for _, item := range tables {
+		fib := Fibonacci(item.a)
+		if fib != item.n {
+			t.Errorf("Fibonacci Was Incorrect, Got %d, Expected %d", fib, item.n)
 		}
 	}
 }

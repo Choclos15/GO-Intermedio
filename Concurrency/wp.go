@@ -18,23 +18,23 @@ func Fibonacci(n int) int {
 	return Fibonacci(n-1) + Fibonacci(n-2)
 }
 
-func main() {
-	tasks := []int{2, 3, 4, 5, 7, 10, 12, 40}
-	nWorkers := 3
-	jobs := make(chan int, len(tasks))
-	results := make(chan int, len(tasks))
+// func main() {
+// 	tasks := []int{2, 3, 4, 5, 7, 10, 12, 40}
+// 	nWorkers := 3
+// 	jobs := make(chan int, len(tasks))
+// 	results := make(chan int, len(tasks))
 
-	for i := 0; i < nWorkers; i++ {
-		go Worker(i, jobs, results)
-	}
+// 	for i := 0; i < nWorkers; i++ {
+// 		go Worker(i, jobs, results)
+// 	}
 
-	for _, value := range tasks {
-		jobs <- value
-	}
+// 	for _, value := range tasks {
+// 		jobs <- value
+// 	}
 
-	close(jobs)
+// 	close(jobs)
 
-	for r := 0; r < len(tasks); r++ {
-		<-results
-	}
-}
+// 	for r := 0; r < len(tasks); r++ {
+// 		<-results
+// 	}
+// }

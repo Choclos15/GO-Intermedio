@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -43,7 +46,7 @@ func (w Worker) Start() {
 				fmt.Printf("Worker With Id %d Started\n", w.Id)
 				fib := Fibonacci(job.Number)
 				time.Sleep(job.Delay)
-				fmt.Printf("Worker With Id %d Finished With Result\n", w.Id, fib)
+				fmt.Printf("Worker With Id %d Finished With Result %d\n", w.Id, fib)
 			case <-w.QuitChan:
 				fmt.Printf("Worker With Id %d Stopped\n", w.Id)
 			}
@@ -83,4 +86,64 @@ func (d *Dispatcher) Dispatch() {
 			}()
 		}
 	}
+}
+
+func (d *Dispatcher) Run() {
+	for i := 0; i < d.MaxWorkers; i++ {
+		worker := NewWorker(i, d.WorkerPool)
+		worker.Start()
+	}
+
+	go d.Dispatch()
+}
+
+func RequestHandler(w http.ResponseWriter, r *http.Request, jobQueue chan Job) {
+	if r.Method != "POST" {
+		w.Header().Set("ALLOW", "POST")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+
+	delay, err := time.ParseDuration(r.FormValue("delay"))
+	if err != nil {
+		http.Error(w, "Invalid Delay", http.StatusBadRequest)
+		return
+	}
+
+	value, err := strconv.Atoi(r.FormValue("value"))
+	if err != nil {
+		http.Error(w, "Invalid Value", http.StatusBadRequest)
+		return
+	}
+
+	name := r.FormValue("name")
+	if name == "" {
+		http.Error(w, "Invalid Name", http.StatusBadRequest)
+		return
+	}
+
+	job := Job{
+		Name:   name,
+		Delay:  delay,
+		Number: value,
+	}
+	jobQueue <- job
+	w.WriteHeader(http.StatusCreated)
+}
+
+func main() {
+	const (
+		maxWorkers   = 4
+		maxQueueSize = 20
+		port         = ":8081"
+	)
+
+	jobQueue := make(chan Job, maxQueueSize)
+	dispatcher := NewDispatcher(jobQueue, maxQueueSize)
+
+	dispatcher.Run()
+	//http://localhost:8081/fib
+	http.HandleFunc("/fib", func(w http.ResponseWriter, r *http.Request) {
+		RequestHandler(w, r, jobQueue)
+	})
+	log.Fatal(http.ListenAndServe(port, nil))
 }
